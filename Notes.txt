@@ -1,0 +1,15 @@
+To do:
+-Save function
+-Load function
+-Display map
+-UI menu
+-Cell rules
+-Map movement
+-Add and delete cells
+-Pause
+-Tick controller
+
+Doing:
+-Generate map
+
+Done:
