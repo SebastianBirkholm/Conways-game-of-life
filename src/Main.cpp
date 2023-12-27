@@ -47,7 +47,8 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();    
     }
-
+    
+    cout << "test";
     glfwTerminate();
     return 0;
 }
