@@ -1,54 +1,43 @@
-#include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-using namespace std; 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-}
-
-//delete
+}  
 
 int main()
 {
-    if (!glfwInit())
-    {
-        cout << "Failed to initialize GLFW" << endl;
-        return -1;
-    }
-
-    glfwWindowHint(GLFW_SAMPLES, 4);
+    //setup
+    glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window;
-    window = glfwCreateWindow(1600, 600, "it works", NULL, NULL);
-    if (window == NULL)
-    {
-        cout << "Failed to open GLFW window" << endl;
-        return -1;
-    }
+    //window object creation of the 2 screens, Main and Settings
+    GLFWwindow* window = glfwCreateWindow(1600, 600, "Main", NULL, NULL);
+    GLFWwindow* window2 = glfwCreateWindow(600, 600, "Settings", NULL, NULL);;
+
     glfwMakeContextCurrent(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        cout << "Failed to initialize GLAD" << endl;
         return -1;
     }
 
-    glViewport(0, 0, 1600, 600);
+    //Resize viewport, when the window recizes
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window2, framebuffer_size_callback);
 
+    //render loop
     while(!glfwWindowShouldClose(window))
     {
         glfwSwapBuffers(window);
-        glfwPollEvents();    
+        glfwSwapBuffers(window2);
+        glfwPollEvents();
     }
-    
-    cout << "test";
+
+    //terminates window
     glfwTerminate();
     return 0;
 }
