@@ -35,9 +35,6 @@ int main()
         return -1;
     }
 
-    //sets clear clour
-    glClearColor(0.5f,0.1f,0.1f,1.0f);
-
     //Resize viewport, when the window recizes
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -49,7 +46,8 @@ int main()
 
         //Rendering
 
-        //clears screen
+        //sets clear color and clears screen
+        glClearColor(0.5f,0.1f,0.1f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         //Swap buffers and handle events
