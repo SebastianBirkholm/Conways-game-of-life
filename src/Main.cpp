@@ -1,10 +1,21 @@
+//includes
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+//resizeing glViewport
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }  
+
+//input handler
+void InputHandler(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
 
 int main()
 {
@@ -16,7 +27,6 @@ int main()
 
     //window object creation of the 2 screens, Main and Settings
     GLFWwindow* window = glfwCreateWindow(1600, 600, "Main", NULL, NULL);
-    GLFWwindow* window2 = glfwCreateWindow(600, 600, "Settings", NULL, NULL);;
 
     glfwMakeContextCurrent(window);
 
@@ -25,15 +35,25 @@ int main()
         return -1;
     }
 
+    //sets clear clour
+    glClearColor(0.5f,0.1f,0.1f,1.0f);
+
     //Resize viewport, when the window recizes
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetFramebufferSizeCallback(window2, framebuffer_size_callback);
 
     //render loop
     while(!glfwWindowShouldClose(window))
     {
+        //Input handeling
+        InputHandler(window);
+
+        //Rendering
+
+        //clears screen
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        //Swap buffers and handle events
         glfwSwapBuffers(window);
-        glfwSwapBuffers(window2);
         glfwPollEvents();
     }
 
