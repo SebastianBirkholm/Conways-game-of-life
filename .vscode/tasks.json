@@ -14,8 +14,8 @@
                 "${workspaceFolder}/src/glad.c",
                 "-lglfw3dll",
                 "-o",
-                "${workspaceFolder}/main.exe",
-                "-mwindows"
+                "${workspaceFolder}/main.exe"
+                //"-mwindows"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

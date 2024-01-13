@@ -12,4 +12,8 @@ To do:
 Doing:
 -Generate map
 
+create a object,
+pass that object to the vertex buffer
+render the vertex buffer
+
 Done:
