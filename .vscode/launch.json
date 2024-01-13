@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": 
+    [
+        {
+            "name": "Launch",
+            "program": "${workspaceFolder}/main.exe",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe"
+              }
+        }
+    ]
+}
