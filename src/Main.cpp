@@ -11,7 +11,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 unsigned int shaderProgram;
-
+const long long unsigned int amount = 10000;
 const char *fragmentShaderSource= "#version 330 core\n"
     "out vec4 FragColor;\n"
     "uniform vec4 ourColor;\n"
@@ -105,29 +105,8 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
-    glm::vec2 translations[1000];
-    int index = 0;
-    float offset = 0.05f;
-    for (int y = -10; y < 10; y += 1)
-    {
-        for (int x = -10; x < 10; x += 1)
-        {
-            glm::vec2 translation;
-            //translation.x = (float)x / 5.0f + offset;
-            //translation.y = (float)y / 5.0f + offset;
-            translation.x = (float)x/10.0 + offset;
-            translation.y = (float)y/10.0f + offset;
-            translations[index++] = translation;
-        }
-    }
-
 // store instance data in an array buffer
 // --------------------------------------
-unsigned int instanceVBO;
-glGenBuffers(1, &instanceVBO);
-glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 1000, &translations[0], GL_STATIC_DRAW);
-glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -135,25 +114,38 @@ glBindBuffer(GL_ARRAY_BUFFER, 0);
         -0.05f,  0.05f, 0.05f, -0.05f, -0.05f, -0.05f,
         -0.05f,  0.05f, 0.05f, -0.05f, 0.05f,  0.05f
     };
+    //create buffers
+    unsigned int VAO, VBO, instanceVBO;
 
-    unsigned int VAO, VBO;
+    //initialse square buffer1
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    //generate vertex array
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
+
+    //generate vertices array
+    glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+
+    //buffer base locations normilised to 0,0
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    //glEnableVertexAttribArray(1);
-    //glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 1 * sizeof(float), (void*)0);
-    // also set instance data
+
+    //generate the offset for the gl_positions and write it to the shader
     glEnableVertexAttribArray(2);
+
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+
     // render loop
     // -----------
+    int k = 10;
     while (!glfwWindowShouldClose(window))
     {
         // render
@@ -164,10 +156,31 @@ glBindBuffer(GL_ARRAY_BUFFER, 0);
         // draw 100 instanced quads
         glUseProgram(shaderProgram);
 
-        // update the uniform color
+        //update the uniform color
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
         glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
     
+        //generate bounch of squares
+        glm::vec2 translations[amount];
+        int index = 0;
+        float offset = 0.05;
+        for (int y = -10; y < k; y += 1)
+        {
+            for (int x = -10; x < k; x += 1)
+            {
+                glm::vec2 translation;
+                translation.x = (float)x/10.0 + offset;
+                translation.y = (float)y/10.0 + offset;
+                translations[index++] = translation;
+            }
+        }
+        k++;
+        //write to the buffer
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, &translations[0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
         glBindVertexArray(VAO);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400); // 100 triangles of 6 vertices each
 
