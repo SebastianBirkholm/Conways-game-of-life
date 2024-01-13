@@ -1,17 +1,24 @@
+//Opengl libraries
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+//math stuff
 #include <glm/glm/glm.hpp>
 
+//writing to the console
 #include <iostream>
 
+//shader library
+#include <shader.hpp>
+
+//function declaration
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 // settings
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-unsigned int shaderProgram;
-const long long unsigned int amount = 10000;
+const long long unsigned int amount = 1;
+
 const char *fragmentShaderSource= "#version 330 core\n"
     "out vec4 FragColor;\n"
     "uniform vec4 ourColor;\n"
@@ -25,7 +32,7 @@ const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 2) in vec2 aOffset;\n"
     "void main()\n"
     "{\n"
-    "float size = 0.5f;\n"
+    "float size = 0.25;\n"
     "   gl_Position = vec4((aPos + aOffset)*size, 0.0, 1.0);\n"
     "}\n\0";
 
@@ -38,28 +45,16 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "please work :)))))))) 🙃", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "🙃", NULL, NULL);
     if (window == NULL)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        return -1;
     }
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
 
     // build and compile our shader program
     // ------------------------------------
@@ -88,6 +83,7 @@ int main()
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
     // link shaders
+    unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
@@ -101,111 +97,93 @@ int main()
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    // configure global opengl state
-    // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
-// store instance data in an array buffer
-// --------------------------------------
-
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
     float Vertices[] = {
-        -0.05f,  0.05f, 0.05f, -0.05f, -0.05f, -0.05f,
-        -0.05f,  0.05f, 0.05f, -0.05f, 0.05f,  0.05f
+        -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, 1.0f, -1.0f, 1.0f,  1.0f
     };
-    //create buffers
-    unsigned int VAO, VBO, instanceVBO;
+    //generate and bind the vertex array
+    unsigned int VAO;
 
-    //initialse square buffer1
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    //generate vertex array
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
     //generate vertices array
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    unsigned int verticesBuffer;
+
+    //Write to the vertex array
+    glGenBuffers(1, &verticesBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 
-    //buffer base locations normilised to 0,0
+    //buffer base locations normilised to 0,0 to the vertex shader
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
-    //generate the offset for the gl_positions and write it to the shader
+    //initialse offset buffer
+    unsigned int offsetBuffer;
+
+    glGenBuffers(1, &offsetBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
+    //give it a null value at the beginning
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
+
+    static GLfloat* testing = new GLfloat[amount * 2];
+
+    // bind the shader program
+    glUseProgram(shaderProgram);
+
+    //update the uniform color
+    int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");     
+    glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
+
+    //generate bounch of squares
+        int index = 0;
+        float offset = 1.0;
+        for (int y = 0; y < 1; y += 1)
+        {
+            for (int x = 0; x < 1; x += 1)
+            {
+                testing[2*index] = (float)x + offset;
+                testing[2*index+1] = (float)y + offset;
+                index++;
+            }
+        }
+
+    //write to the offset buffer
+    glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec2) * amount, testing);
+
+    //Write the generated data in the offset buffer to the vertex shader
     glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 
-    // render loop
-    // -----------
-    int k = 10;
+    //tell the vertex shader that its instanced data
+    glVertexAttribDivisor(2, 1);
+
     while (!glfwWindowShouldClose(window))
     {
-        // render
-        // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // draw 100 instanced quads
-        glUseProgram(shaderProgram);
-
-        //update the uniform color
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
-    
-        //generate bounch of squares
-        glm::vec2 translations[amount];
-        int index = 0;
-        float offset = 0.05;
-        for (int y = -10; y < k; y += 1)
-        {
-            for (int x = -10; x < k; x += 1)
-            {
-                glm::vec2 translation;
-                translation.x = (float)x/10.0 + offset;
-                translation.y = (float)y/10.0 + offset;
-                translations[index++] = translation;
-            }
-        }
-        k++;
-        //write to the buffer
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, &translations[0], GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        glBindVertexArray(VAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 400); // 100 triangles of 6 vertices each
-
-        glBindVertexArray(0);
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+        //draw the triangles
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, amount);
+        
+        //Swap the buffer
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
 
     glfwTerminate();
     return 0;
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
+//Function definitions
+
+//Activates when someone resizes the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }

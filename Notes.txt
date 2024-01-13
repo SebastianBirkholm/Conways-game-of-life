@@ -8,12 +8,10 @@ To do:
 -Add and delete cells
 -Pause
 -Tick controller
+-create cell struct
+-make it so the squares can have diffrent colors
 
 Doing:
--Generate map
-
-create a object,
-pass that object to the vertex buffer
-render the vertex buffer
+-put the shader in its own cpp file, using headers
 
 Done:
