@@ -17,7 +17,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 // settings
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-const long long unsigned int amount = 1;
+const unsigned int amount = 9;
+static GLfloat* testing = new GLfloat[amount * 3];
 
 const char *fragmentShaderSource= "#version 330 core\n"
     "out vec4 FragColor;\n"
@@ -28,12 +29,10 @@ const char *fragmentShaderSource= "#version 330 core\n"
     "}\0";
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec2 aPos;\n"
-    //"layout (location = 1) in float size;\n"
-    "layout (location = 2) in vec2 aOffset;\n"
+    "layout (location = 1) in vec3 aOffset;\n"
     "void main()\n"
     "{\n"
-    "float size = 0.25;\n"
-    "   gl_Position = vec4((aPos + aOffset)*size, 0.0, 1.0);\n"
+    "   gl_Position = vec4((aPos + aOffset.xy)*aOffset.z, 0.0, 1.0);\n"
     "}\n\0";
 
 int main()
@@ -100,8 +99,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     float Vertices[] = {
-        -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, 1.0f, -1.0f, 1.0f,  1.0f
+        -0.5f,  0.5f, 0.5f, -0.5f, -0.5f, -0.5f,
+        -0.5f,  0.5f, 0.5f, -0.5f, 0.5f,  0.5f
     };
     //generate and bind the vertex array
     unsigned int VAO;
@@ -121,16 +120,6 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
-    //initialse offset buffer
-    unsigned int offsetBuffer;
-
-    glGenBuffers(1, &offsetBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
-    //give it a null value at the beginning
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
-
-    static GLfloat* testing = new GLfloat[amount * 2];
-
     // bind the shader program
     glUseProgram(shaderProgram);
 
@@ -138,39 +127,47 @@ int main()
     int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");     
     glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
 
-    //generate bounch of squares
-        int index = 0;
-        float offset = 1.0;
-        for (int y = 0; y < 1; y += 1)
-        {
-            for (int x = 0; x < 1; x += 1)
-            {
-                testing[2*index] = (float)x + offset;
-                testing[2*index+1] = (float)y + offset;
-                index++;
-            }
-        }
+    //initialse and write the offset buffer
+    unsigned int offsetBuffer;
 
-    //write to the offset buffer
+    glGenBuffers(1, &offsetBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * amount, NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec2) * amount, testing);
-
-    //Write the generated data in the offset buffer to the vertex shader
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
-    //tell the vertex shader that its instanced data
-    glVertexAttribDivisor(2, 1);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * amount, NULL, GL_STATIC_DRAW);
 
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        //generate bounch of offsets and size
+        int index = 0;
+        float offset = 0.5f;
+        for (int y = 0; y < 1; y += 1)
+        {
+            for (int x = 0; x < amount; x += 1)
+            {
+                testing[3*index] = (float)x + offset;
+                testing[3*index+1] = (float)y + offset;
+                testing[3*index+2] = 0.1f;
+                index++;
+            }
+        }
+
+        //buffer the data
+        glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * amount, NULL, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * amount, testing);
+
+        //Write the generated data in the offset buffer to the vertex shader
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+        //tell the vertex shader that its instanced data
+        glVertexAttribDivisor(1, 1);
+
         //draw the triangles
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, amount);
-        
+
         //Swap the buffer
         glfwSwapBuffers(window);
         glfwPollEvents();
