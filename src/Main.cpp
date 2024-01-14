@@ -17,8 +17,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 // settings
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-const unsigned int amount = 9;
-static GLfloat* testing = new GLfloat[amount * 3];
+const unsigned int amount = 10000;
+static GLfloat* testing = new GLfloat[amount*amount * 3];
 
 const char *fragmentShaderSource= "#version 330 core\n"
     "out vec4 FragColor;\n"
@@ -27,6 +27,7 @@ const char *fragmentShaderSource= "#version 330 core\n"
     "{\n"
     "   FragColor = ourColor;\n"
     "}\0";
+
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec2 aPos;\n"
     "layout (location = 1) in vec3 aOffset;\n"
@@ -132,7 +133,7 @@ int main()
 
     glGenBuffers(1, &offsetBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * amount, NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pow(amount,2), NULL, GL_STATIC_DRAW);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -142,7 +143,7 @@ int main()
         //generate bounch of offsets and size
         int index = 0;
         float offset = 0.5f;
-        for (int y = 0; y < 1; y += 1)
+        for (int y = 0; y < amount; y += 1)
         {
             for (int x = 0; x < amount; x += 1)
             {
@@ -155,8 +156,8 @@ int main()
 
         //buffer the data
         glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * amount, NULL, GL_STATIC_DRAW);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * amount, testing);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pow(amount,2), NULL, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * pow(amount,2), testing);
 
         //Write the generated data in the offset buffer to the vertex shader
         glEnableVertexAttribArray(1);
@@ -166,7 +167,7 @@ int main()
         glVertexAttribDivisor(1, 1);
 
         //draw the triangles
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, amount);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, pow(amount,2));
 
         //Swap the buffer
         glfwSwapBuffers(window);
