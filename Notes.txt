@@ -3,15 +3,14 @@ To do:
 -Load function
 -Display map
 -UI menu
--Cell rules
 -Map movement
 -Add and delete cells
 -Pause
 -Tick controller
--create cell struct
 -make it so the squares can have diffrent colors
+-put the shader in its own cpp file, using headers
 
 Doing:
--put the shader in its own cpp file, using headers
+-Cell rules
 
 Done:

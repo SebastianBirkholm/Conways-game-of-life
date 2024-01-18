@@ -4,6 +4,7 @@
 
 //math stuff
 #include <glm/glm/glm.hpp>
+#include <cmath>
 
 //writing to the console
 #include <iostream>
@@ -11,14 +12,22 @@
 //shader library
 #include <shader.hpp>
 
-//function declaration
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
-// settings
+//settings
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
-const unsigned int amount = 10000;
-static GLfloat* testing = new GLfloat[amount*amount * 3];
+
+//creates global variables
+const unsigned int amount = 3 + 2;
+static GLfloat* testing = new GLfloat[(amount-2)*(amount-2) * 3];
+static float size = 0.1f;
+
+//function declaration
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+bool CheckNeighbors(bool (*temp)[amount][amount], int x, int y);
+
+//creates cell array
+bool cells[amount][amount] = {true};
+bool tempCells[amount][amount] = {false};
 
 const char *fragmentShaderSource= "#version 330 core\n"
     "out vec4 FragColor;\n"
@@ -38,22 +47,30 @@ const char *vertexShaderSource = "#version 330 core\n"
 
 int main()
 {
-    // glfw: initialize and configure
-    // ------------------------------
+    //variable declaration
+    float offset = 0.5f;
+    int neighborCounter = 0;
+
+    //initialise GLFW
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    //creates the window
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "🙃", NULL, NULL);
     if (window == NULL)
     {
         glfwTerminate();
     }
 
+    //makes the current window the focus
     glfwMakeContextCurrent(window);
+
+    //set the resize screen callback function
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    //loades Glad
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
 
     // build and compile our shader program
@@ -135,22 +152,41 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pow(amount,2), NULL, GL_STATIC_DRAW);
 
+    for (int i = 1; i < amount-1; i++)
+    {
+        for (int j = 1; j < amount-1; j++)
+        {
+            if(j%2==0) cells[i][j] = true;
+            else cells[i][j] = false;
+        }
+    }
+    
+
     while (!glfwWindowShouldClose(window))
     {
+        //variable declaration
+        int index = 0;
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //generate bounch of offsets and size
-        int index = 0;
-        float offset = 0.5f;
-        for (int y = 0; y < amount; y += 1)
+        //updates the array and draws the live cells to the screen
+        for (int y = 1; y < amount-1; y++)
         {
-            for (int x = 0; x < amount; x += 1)
+            for (int x = 1; x < amount-1; x++)
             {
+                //checks if a cell is alive
+                if (cells[y][x])
+                {
+                    //draws it to the graphics buffer
                 testing[3*index] = (float)x + offset;
                 testing[3*index+1] = (float)y + offset;
-                testing[3*index+2] = 0.1f;
+                testing[3*index+2] = size;
                 index++;
+                }
+
+                //cell rules execution
+                //*pTempCell[x][y] = CheckNeighbors(pCell,x,y);
             }
         }
 
@@ -167,7 +203,7 @@ int main()
         glVertexAttribDivisor(1, 1);
 
         //draw the triangles
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, pow(amount,2));
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, index);
 
         //Swap the buffer
         glfwSwapBuffers(window);
@@ -184,4 +220,19 @@ int main()
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+
+//check neighbors
+bool CheckNeighbors(int x, int y)
+{
+    //amount of alive neighbors
+    int counter = 0;
+
+    //checks around the cell
+    for (int i = 1; i < 9; i++)
+    {
+        if(cells[x-(int)round(cos((6.28/8)*i))][y-(int)round(sin((6.28/8)*i))]) counter++;
+    }
+
+    return false;
 }
