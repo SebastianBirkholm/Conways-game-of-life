@@ -1,16 +1,23 @@
 To do:
 -Save function
 -Load function
--Display map
 -UI menu
--Map movement
+
 -Add and delete cells
 -Pause
--Tick controller
+
+-Resize map
+-Clamp size
+
+Nice to have:
 -make it so the squares can have diffrent colors
 -put the shader in its own cpp file, using headers
 
 Doing:
--Cell rules
+-Manualy move forward
+-Map movement
 
 Done:
+-Display map
+-Tick controller
+-Cell rules
