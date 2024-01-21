@@ -1,7 +1,8 @@
 To do:
+-UI menu
+
 -Save function
 -Load function
--UI menu
 
 -Add and delete cells
 -Pause
@@ -14,10 +15,10 @@ Nice to have:
 -put the shader in its own cpp file, using headers
 
 Doing:
--Manualy move forward
--Map movement
+
 
 Done:
+-Map movement
 -Display map
 -Tick controller
 -Cell rules

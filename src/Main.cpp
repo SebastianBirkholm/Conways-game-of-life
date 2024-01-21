@@ -5,6 +5,8 @@
 //math stuff
 #include <glm/glm/glm.hpp>
 #include <cmath>
+#include <glm/glm/gtc/matrix_transform.hpp>
+#include <glm/glm/gtc/type_ptr.hpp>
 
 //writing to the console
 #include <iostream>
@@ -17,19 +19,32 @@ const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 
 //creates global variables
-const unsigned int amount = 9 + 2;
+const unsigned int amount = 20 + 2;
 static GLfloat* testing = new GLfloat[(amount-2)*(amount-2) * 3];
-float size = 0.1f;
 
+//min size 0.01f
+float size = 0.1f;
 
 //function declaration
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow *window);
 bool CheckNeighbors(int x, int y);
 
 //creates cell array
 bool cells[amount][amount];
 bool tempCells[amount][amount];
 
+//camera
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+//time
+float currentTime = 0;
+float deltaTime = 0;
+float lastTime = 0;
+
+//shaders
 const char *fragmentShaderSource= "#version 330 core\n"
     "out vec4 FragColor;\n"
     "uniform vec4 ourColor;\n"
@@ -41,20 +56,20 @@ const char *fragmentShaderSource= "#version 330 core\n"
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec2 aPos;\n"
     "layout (location = 1) in vec3 aOffset;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4((aPos + aOffset.xy)*aOffset.z, 0.0, 1.0);\n"
+    "   gl_Position = projection * view * vec4((aPos + aOffset.xy)*aOffset.z, 0.0, 1.0);\n"
     "}\n\0";
 
 int main()
 {
     //variable declaration
     float offset = 0.5f;
-    float currentTime = 0;
-    float lastTime = 0;
     int index = 0;
-    bool timeActive = false;
-    bool moveForwardManual = false;
+    bool active = true;
+    bool firstScan = true;
 
     //initialise GLFW
     glfwInit();
@@ -167,22 +182,36 @@ int main()
         }
     }
     
+    //camara setup
+    glm::mat4 projection = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 100.0f);
+    //write to location
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1 , GL_FALSE, &projection[0][0]);
 
+    //main loop
     while (!glfwWindowShouldClose(window))
     {
+        //Tick time
+        currentTime += glfwGetTime() - lastTime;
+        //delta time
+        deltaTime = glfwGetTime() - lastTime;
+        //set old time to new time
+        lastTime = glfwGetTime();
+
+        // input
+        processInput(window);
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //Tick controller
-        currentTime += glfwGetTime() - lastTime; 
-        lastTime = glfwGetTime();
+        //process camara
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),1, GL_FALSE, &view[0][0]);
 
-        //Waits till 5 seconds have passed
-        std::cout << currentTime << std::endl;
-        if ((currentTime > 5.0f && timeActive) || moveForwardManual)
+        //Waits till x seconds have passed
+        if (currentTime > 100.0f && active || firstScan)
         {
-            //resets moveForwardManual
-            moveForwardManual = false;
+            //first scan
+            firstScan = false;
 
             //resets current time
             currentTime = 0;
@@ -217,8 +246,8 @@ int main()
 
         //buffer the data
         glBindBuffer(GL_ARRAY_BUFFER, offsetBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pow(amount,2), NULL, GL_STATIC_DRAW);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * pow(amount,2), testing);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pow(amount-2,2), NULL, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * pow(amount-2,2), testing);
 
         //Write the generated data in the offset buffer to the vertex shader
         glEnableVertexAttribArray(1);
@@ -280,4 +309,46 @@ bool CheckNeighbors(int x, int y)
 
     //default for exceptions
     return false;
+}
+
+//process input
+void processInput(GLFWwindow *window)
+{
+    //variables
+    float clamp = (float)(amount-2)*size;
+
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    float cameraSpeed = size * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        if (cameraPos.y+1<clamp)
+        {
+            cameraPos.y += cameraSpeed;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        if (cameraPos.y>0)
+        {
+            cameraPos.y -= cameraSpeed;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        if (cameraPos.x>0)
+        {
+            cameraPos.x -= cameraSpeed;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        if (cameraPos.x+1<clamp)
+        {
+            cameraPos.x += cameraSpeed;
+        }
+    }
+
+    //std::cout << cameraPos.x << " " << cameraPos.y << " " << clamp << std::endl;
 }
