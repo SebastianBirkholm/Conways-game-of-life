@@ -1,18 +1,8 @@
 To do:
--UI menu
-
--Save function
--Load function
-
 -Add and delete cells
 -Pause
-
--Resize map
 -Clamp size
-
-Nice to have:
--make it so the squares can have diffrent colors
--put the shader in its own cpp file, using headers
+-Change size
 
 Doing:
 
@@ -22,3 +12,4 @@ Done:
 -Display map
 -Tick controller
 -Cell rules
+-Fullscreen

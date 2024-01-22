@@ -15,11 +15,11 @@
 #include <shader.hpp>
 
 //settings
-const unsigned int SCR_WIDTH = 1000;
-const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 //creates global variables
-const unsigned int amount = 20 + 2;
+const unsigned int amount = 5000 + 2;
 static GLfloat* testing = new GLfloat[(amount-2)*(amount-2) * 3];
 
 //min size 0.01f
@@ -34,7 +34,7 @@ bool CheckNeighbors(int x, int y);
 bool cells[amount][amount];
 bool tempCells[amount][amount];
 
-//camera
+//camera variables
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
@@ -78,7 +78,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //creates the window
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "🙃", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "🙃", glfwGetPrimaryMonitor(), NULL);
     if (window == NULL)
     {
         glfwTerminate();
@@ -164,7 +164,6 @@ int main()
 
     //update the uniform color
     int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");     
-    glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
 
     //initialse and write the offset buffer
     unsigned int offsetBuffer;
@@ -183,7 +182,7 @@ int main()
     }
     
     //camara setup
-    glm::mat4 projection = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 100.0f);
+    glm::mat4 projection = glm::ortho(0.0f, 1.777777777777777777f, 0.0f, 1.0f, 0.1f, 100.0f);
     //write to location
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1 , GL_FALSE, &projection[0][0]);
 
@@ -199,6 +198,9 @@ int main()
 
         // input
         processInput(window);
+
+        //color
+        glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -317,6 +319,7 @@ void processInput(GLFWwindow *window)
     //variables
     float clamp = (float)(amount-2)*size;
 
+    //Process input from user
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -344,7 +347,7 @@ void processInput(GLFWwindow *window)
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        if (cameraPos.x+1<clamp)
+        if (cameraPos.x+1.777777777777777777<clamp)
         {
             cameraPos.x += cameraSpeed;
         }
