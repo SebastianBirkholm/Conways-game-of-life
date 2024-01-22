@@ -17,9 +17,13 @@
 //settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
+int red = 255;
+int green = 0;
+bool active = false, resize = false;
+bool downSpace = false, downUp, downDown;
 
 //creates global variables
-const unsigned int amount = 5000 + 2;
+const unsigned int amount = 9 + 2;
 static GLfloat* testing = new GLfloat[(amount-2)*(amount-2) * 3];
 
 //min size 0.01f
@@ -68,7 +72,6 @@ int main()
     //variable declaration
     float offset = 0.5f;
     int index = 0;
-    bool active = true;
     bool firstScan = true;
 
     //initialise GLFW
@@ -196,11 +199,13 @@ int main()
         //set old time to new time
         lastTime = glfwGetTime();
 
+        std::cout << currentTime << std::endl;
+
         // input
         processInput(window);
 
         //color
-        glUniform4f(vertexColorLocation, 0.0f, 255.0f, 0.0f, 1.0f);
+        glUniform4f(vertexColorLocation, red, green, 0.0f, 1.0f);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -210,40 +215,63 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),1, GL_FALSE, &view[0][0]);
 
         //Waits till x seconds have passed
-        if (currentTime > 100.0f && active || firstScan)
-        {
-            //first scan
-            firstScan = false;
-
+        if ((currentTime > 3.0f && active) || firstScan || resize)
+        {   
             //resets current time
             currentTime = 0;
 
             //resets index
             index = 0;
 
+
+            if (active)
+            {
+                for (int k = 1; k < amount-1; k++)
+                {
+                    for (int p = 1; p < amount-1; p++)
+                    {
+                        //updates the temp array based on Conways rules
+                        if(active || firstScan)
+                        {
+                            tempCells[k][p] = CheckNeighbors(p,k);
+                        }
+                    }
+                
+                }
+            }
+
+            //Updates the cell array
+            if(active) 
+            {
+                std::copy(&tempCells[0][0], &tempCells[0][0]+amount*amount, &cells[0][0]);
+            }
+
             //updates the array and draws the live cells to the screen
             for (int y = 1; y < amount-1; y++)
             {
                 for (int x = 1; x < amount-1; x++)
                 {
-                    //updates the temp array based on Conways rules
-                    tempCells[y][x] = CheckNeighbors(x,y);
-
                     //checks if a cell is alive
-                    if (!cells[y][x]) continue;
-                
-                    //draws it to the graphics buffer
-                    testing[3*index] = (float)(x-1) + offset;
-                    testing[3*index+1] = (float)(y-1) + offset;
-                    testing[3*index+2] = size;
+                    if (cells[y][x])
+                    {                        
+                        //draws it to the graphics buffer
+                        testing[3*index] = (float)(x-1) + offset;
+                        testing[3*index+1] = (float)(y-1) + offset;
+                        testing[3*index+2] = size;
                     
-                    //counts index up
-                    index++;
+                        //counts index up
+                        index++;
+                    }
+
+                    
                 }
             }
 
-            //Updates the cell array
-            std::copy(&tempCells[0][0], &tempCells[0][0]+amount*amount, &cells[0][0]);
+            //only once per arrow click
+            resize = false;
+
+            //first scan
+            firstScan = false;
         }
 
         //buffer the data
@@ -353,5 +381,63 @@ void processInput(GLFWwindow *window)
         }
     }
 
+    //resize
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        if (size < 1 && !downUp)
+        {
+            size += 0.01;
+            downUp = true;
+            resize = true;
+            active = false;
+            green = 0;
+            red = 255;
+        }
+    }
+    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        if (size > 0.02 && !downDown)
+        {
+            size -= 0.01;
+            downDown = true;
+            resize = true;
+            active = false;
+            green = 0;
+            red = 255;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
+    {
+        downUp = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
+    {
+        downDown = false;
+    }
+
+    //pause
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        if (active && !downSpace)
+        {
+            active = false;
+            downSpace = true;
+            red = 255;
+            green = 0;
+        }
+        else if(!active && !downSpace)
+        {
+            active = true;
+            downSpace = true;
+            red = 0;
+            green = 255;
+            currentTime = 0;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    {
+        downSpace = false;
+    }
+    
     //std::cout << cameraPos.x << " " << cameraPos.y << " " << clamp << std::endl;
 }

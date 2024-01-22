@@ -1,13 +1,13 @@
 To do:
 -Add and delete cells
--Pause
--Clamp size
--Change size
 
 Doing:
 
 
 Done:
+-Clamp size
+-Change size
+-Pause
 -Map movement
 -Display map
 -Tick controller
